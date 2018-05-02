@@ -30,6 +30,7 @@ import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIViewOperationQueue;
 import com.facebook.react.views.textinput.ReactEditText;
+import com.facebook.react.uimanager.events.EventDispatcher;
 
 public class RNCustomKeyboardModule extends ReactContextBaseJavaModule {
     private final int TAG_ID = 0xdeadbeaf;
@@ -63,7 +64,12 @@ public class RNCustomKeyboardModule extends ReactContextBaseJavaModule {
                 edit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                     @Override
                     public void onFocusChange(final View v, boolean hasFocus) {
+                        EventDispatcher eventDispatcher =
+                                reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher();
                         if (hasFocus) {
+                            eventDispatcher.dispatchEvent(
+                                    new ReactTextInputFocusEvent(
+                                            edit.getId()));
                             View keyboard = (View)edit.getTag(TAG_ID);
                             if (keyboard.getParent() == null) {
                                 activity.addContentView(keyboard, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -75,6 +81,14 @@ public class RNCustomKeyboardModule extends ReactContextBaseJavaModule {
                                 }
                             });
                         } else {
+                            eventDispatcher.dispatchEvent(
+                                    new ReactTextInputBlurEvent(
+                                            edit.getId()));
+
+                            eventDispatcher.dispatchEvent(
+                                    new ReactTextInputEndEditingEvent(
+                                            edit.getId(),
+                                            edit.getText().toString()));
                             View keyboard = (View)edit.getTag(TAG_ID);
                             if (keyboard.getParent() != null) {
                                 ((ViewGroup) keyboard.getParent()).removeView(keyboard);
